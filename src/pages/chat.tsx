@@ -3,9 +3,10 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Message, User } from '@prisma/client';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
+import { Tooltip, TooltipContent, TooltipContentProps, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { useLocalStorage, usePrevious } from '@uidotdev/usehooks';
 import bridg from 'bridg';
+import moment from 'moment';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
@@ -91,7 +92,7 @@ const Chat: React.FC<{}> = ({}) => {
     <div className="">
       CHAT PAGE
       <div className="fixed inset-0 bg-gray-50 ">
-        <div className="bg-slate-950 opacity-80 z-10 text-white sticky top-0 h-14 shadow-lg flex items-center px-5 justify-between">
+        <div className="bg-indigo-900 opacity-80 z-10 text-white sticky top-0 h-14 shadow-lg flex items-center px-5 justify-between">
           <div className="flex text-2xl font-medium gap-2">
             <div className="font-normal">bridg.chat</div>
           </div>
@@ -127,8 +128,14 @@ const Chat: React.FC<{}> = ({}) => {
 
               return (
                 <div key={m.id} className={`w-full ${isMyMessage ? 'justify-end' : isSystemMessage ? 'justify-center' : ''} flex gap-1  break-words`}>
-                  {!isSystemMessage && !isMyMessage && <MessageAvatar user={author} />}
-                  {isSystemMessage ? <div className="text-slate-400">{m.body}</div> : <div className={`rounded-xl p-2 max-w-[80%] ${isMyMessage ? 'bg-slate-900 text-white' : ' bg-slate-200'}`}>{m.body}</div>}
+                  {!isSystemMessage && author && !isMyMessage && <MessageAvatar user={author} />}
+                  {isSystemMessage ? (
+                    <div className="text-slate-400">{m.body}</div>
+                  ) : (
+                    <WithTooltip tooltipText={moment(m.createdAt).fromNow()} side="left">
+                      <div className={`rounded-xl p-2 max-w-[80%] ${isMyMessage ? 'bg-indigo-600 text-white' : ' bg-slate-200'}`}>{m.body}</div>
+                    </WithTooltip>
+                  )}
                 </div>
               );
             })}
@@ -160,22 +167,29 @@ const Chat: React.FC<{}> = ({}) => {
 
 export default ChatScreen;
 
-const MessageAvatar: React.FC<{ user?: User }> = ({ user }) => {
+const MessageAvatar: React.FC<{ user: User }> = ({ user }) => {
   return (
+    <WithTooltip tooltipText={user?.name}>
+      <div style={{ backgroundColor: colorHexes[user?.colorIndex || 0] }} className="cursor-default h-10 w-10 rounded-full  text-white flex items-center justify-center">
+        {slugToInitials(user?.name || '')}
+      </div>
+    </WithTooltip>
+  );
+};
+
+const WithTooltip: React.FC<{ children: React.ReactNode; tooltipText: string; side?: TooltipContentProps['side'] }> = ({ children, tooltipText, side = 'top' }) => {
+  return tooltipText ? (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div style={{ backgroundColor: colorHexes[user?.colorIndex || 0] }} className="cursor-default h-10 w-10 rounded-full  text-white flex items-center justify-center">
-            {/* {user?.name.slice(0, 2).toUpperCase()} */}
-            {slugToInitials(user?.name || '')}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent className="bg-slate-950 text-white p-2 rounded-md">
-          <p className="">@{user?.name}</p>
-          <div className="absolute -bottom-1 rounded-sm bg-slate-950 h-3 w-3 left-[45%] rotate-45"></div>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side={side} className="bg-slate-950 text-white p-2 rounded-md">
+          <p className="">{tooltipText}</p>
+          {side === 'top' && <div className="absolute -bottom-1 rounded-sm bg-slate-950 h-3 w-3 left-[45%] rotate-45" />}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  ) : (
+    <>{children}</>
   );
 };
 

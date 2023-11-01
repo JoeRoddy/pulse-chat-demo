@@ -16,7 +16,7 @@ export const socket: NextWebSocketHandler = (ws) => {
   ws.on('close', () => {
     console.log('connection closed, stopping subscriptions');
 
-    subscriptions.forEach((s) => s.subscription.stop());
+    subscriptions.forEach((s) => s?.subscription?.stop());
   });
 
   ws.on('message', async function message(data: string) {
@@ -34,7 +34,7 @@ export const socket: NextWebSocketHandler = (ws) => {
           1,
         )
         .at(0)
-        ?.subscription.stop();
+        ?.subscription?.stop();
     } else {
       console.log('incoming request', request);
 
