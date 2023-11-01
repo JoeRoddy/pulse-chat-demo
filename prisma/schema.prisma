@@ -5,7 +5,6 @@ generator client {
 generator bridg {
   provider = "bridg"
   pulse    = true
-  // api      = "ws://localhost:3000/api/socket"
   api      = "wss://bridg-chat.onrender.com"
 }
 
@@ -26,10 +25,11 @@ model User {
 }
 
 model Message {
-  body String
+  body     String
+  isSystem Boolean @default(false)
 
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id])
 
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
