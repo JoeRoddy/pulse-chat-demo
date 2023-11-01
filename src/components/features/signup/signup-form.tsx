@@ -1,8 +1,17 @@
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { getRandomInt, slugify } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '@prisma/client';
 import { useLocalStorage } from '@uidotdev/usehooks';
@@ -16,7 +25,11 @@ const formSchema = z.object({
   }),
 });
 
-export function SignupForm({ onUserCreated }: { onUserCreated: (user: User) => void }) {
+export function SignupForm({
+  onUserCreated,
+}: {
+  onUserCreated: (user: User) => void;
+}) {
   const [user, saveUser] = useLocalStorage<User | null>('user', null);
   const [errCreatingUser, setErrCreatingUser] = useState(false);
 
@@ -33,14 +46,16 @@ export function SignupForm({ onUserCreated }: { onUserCreated: (user: User) => v
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     bridg.user
-      .create({ data: { name: slugify(values.name), colorIndex: getRandomInt(0, 9) } })
+      .create({
+        data: { name: slugify(values.name), colorIndex: getRandomInt(0, 9) },
+      })
       .then((user) => {
         console.log('user created!', user);
         setErrCreatingUser(false);
         bridg.message.create({
           data: {
             isSystem: true,
-            body: `${user.name} has joined the chat!`,
+            body: `@${user.name} has joined the chat!`,
           },
         });
         saveUser(user);
@@ -63,24 +78,20 @@ export function SignupForm({ onUserCreated }: { onUserCreated: (user: User) => v
               <FormControl>
                 <Input placeholder="Michael Scarn" {...field} />
               </FormControl>
-              <FormDescription>This is your public display name.</FormDescription>
+              <FormDescription>
+                This is your public display name.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        {errCreatingUser && <p className="text-sm font-medium text-red-500 dark:text-red-900">Error creating user</p>}
+        {errCreatingUser && (
+          <p className="text-sm font-medium text-red-500 dark:text-red-900">
+            Error creating user
+          </p>
+        )}
         <Button type="submit">Submit</Button>
       </form>
     </Form>
   );
-}
-
-// get random int in range
-function getRandomInt(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-// convert string to lower case underscore separated version instead of spaces
-function slugify(str: string) {
-  return str.toLowerCase().replace(/ /g, '_');
 }

@@ -1,9 +1,15 @@
 import { SignupForm } from '@/components/features/signup/signup-form';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
-export function Signup() {
+export function SignupDialog() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   useEffect(() => {
@@ -16,7 +22,9 @@ export function Signup() {
       <DialogContent className="sm:max-w-[425px]" hideCloseButton>
         <DialogHeader>
           <DialogTitle>Create profile</DialogTitle>
-          <DialogDescription>Choose your username to get started</DialogDescription>
+          <DialogDescription>
+            Choose your username to get started
+          </DialogDescription>
         </DialogHeader>
         <SignupForm
           onUserCreated={() => {

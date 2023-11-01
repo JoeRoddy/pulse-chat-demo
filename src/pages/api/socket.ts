@@ -9,7 +9,9 @@ import { rules } from 'prisma/rules';
 
 const PULSE_API_KEY = process.env.PULSE_API_KEY || '';
 
-const db = new PrismaClient().$extends(withPulse({ apiKey: PULSE_API_KEY })) as unknown as PrismaClient;
+const db = new PrismaClient().$extends(
+  withPulse({ apiKey: PULSE_API_KEY }),
+) as unknown as PrismaClient;
 
 export const socket: NextWebSocketHandler = (ws) => {
   let subscriptions: any[] = [];
@@ -19,11 +21,12 @@ export const socket: NextWebSocketHandler = (ws) => {
     subscriptions.forEach((s) => s?.subscription?.stop());
   });
 
-  ws.on('message', async function message(data: string) {
+  ws.on('message', async (data: string) => {
     const incomingMsg = JSON.parse(data);
     const request = incomingMsg.payload;
 
-    const reply = (replyPayload: {}) => ws.send(JSON.stringify({ id: incomingMsg.id, payload: replyPayload }));
+    const reply = (replyPayload: {}) =>
+      ws.send(JSON.stringify({ id: incomingMsg.id, payload: replyPayload }));
 
     if (request.func === 'unsubscribe') {
       console.log('stopping subscription');
@@ -43,7 +46,7 @@ export const socket: NextWebSocketHandler = (ws) => {
         uid: '',
         db,
         onSubscriptionCreated: (subscription) => {
-          console.log('subscription created!!!');
+          console.log('subscription created!!');
           subscriptions.push({ id: incomingMsg.id, subscription });
         },
         onSubscriptionEvent: (newData) => {
