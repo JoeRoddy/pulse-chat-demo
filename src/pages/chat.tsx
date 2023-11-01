@@ -3,7 +3,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Message, User } from '@prisma/client';
-import { Tooltip, TooltipContent, TooltipContentProps, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
+import { Tooltip, TooltipArrow, TooltipContent, TooltipContentProps, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { useLocalStorage, usePrevious } from '@uidotdev/usehooks';
 import bridg from 'bridg';
 import moment from 'moment';
@@ -183,8 +183,8 @@ const WithTooltip: React.FC<{ children: React.ReactNode; tooltipText: string; si
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
         <TooltipContent side={side} className="bg-slate-950 text-white p-2 rounded-md">
-          <p className="">{tooltipText}</p>
-          {side === 'top' && <div className="absolute -bottom-1 rounded-sm bg-slate-950 h-3 w-3 left-[45%] rotate-45" />}
+          <p>{tooltipText}</p>
+          <TooltipArrow />
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
