@@ -58,14 +58,14 @@ const Chat: React.FC<{}> = ({}) => {
       setMessages(messages.reverse());
 
       // @ts-ignore
-      //   const subscription = await bridg.message.subscribe({ create: { after: {} } });
-      //   if (subscription instanceof Error) return console.error('err', subscription);
+      const subscription = await bridg.message.subscribe({ create: { after: {} } });
+      if (subscription instanceof Error) return console.error('err', subscription);
 
-      //   for await (const event of subscription) {
-      //     console.log('event', event);
-      //     if (!event.after.isSystem && !users?.some((u) => u.id === event.after.authorId)) fetchUsers();
-      //     setMessages((prev) => [...prev, event.after]);
-      //   }
+      for await (const event of subscription) {
+        console.log('event', event);
+        if (!event.after.isSystem && !users?.some((u) => u.id === event.after.authorId)) fetchUsers();
+        setMessages((prev) => [...prev, event.after]);
+      }
     })();
   }, []);
 
