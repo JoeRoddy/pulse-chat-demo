@@ -8,7 +8,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
-    "preinstall": "npx npm-force-resolutions",
     "start": "next start",
     "lint": "next lint",
     "generate": "npx prisma generate",
