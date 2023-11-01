@@ -33,6 +33,7 @@ const newMessageSchema = z.object({
 const Chat: React.FC<{}> = ({}) => {
   const [user, saveUser] = useLocalStorage<User | null>('user', null);
   const router = useRouter();
+  if (!user) router.push('/');
   const messageBox = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const prevMessages = usePrevious(messages);
@@ -63,7 +64,10 @@ const Chat: React.FC<{}> = ({}) => {
 
       for await (const event of subscription) {
         console.log('event', event);
+
         if (!event.after.isSystem && !users?.some((u) => u.id === event.after.authorId)) fetchUsers();
+        // fixes seeing yourself join twice
+        if (messages.some((m) => m.id === event.after?.id)) return;
         setMessages((prev) => [...prev, event.after]);
       }
     })();
@@ -99,7 +103,7 @@ const Chat: React.FC<{}> = ({}) => {
               variant={'secondary'}
               onClick={() => {
                 saveUser(null);
-                router.push('/');
+                router.reload();
               }}
               // className="mb-4"
             >
