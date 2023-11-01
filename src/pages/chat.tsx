@@ -30,7 +30,7 @@ const newMessageSchema = z.object({
   }),
 });
 
-const Chat: NextPage<{}> = ({}) => {
+const Chat: React.FC<{}> = ({}) => {
   const [user, saveUser] = useLocalStorage<User | null>('user', null);
   const router = useRouter();
   const messageBox = useRef<HTMLDivElement>(null);
@@ -58,14 +58,14 @@ const Chat: NextPage<{}> = ({}) => {
       setMessages(messages.reverse());
 
       // @ts-ignore
-      const subscription = await bridg.message.subscribe({ create: { after: {} } });
-      if (subscription instanceof Error) return console.error('err', subscription);
+      //   const subscription = await bridg.message.subscribe({ create: { after: {} } });
+      //   if (subscription instanceof Error) return console.error('err', subscription);
 
-      for await (const event of subscription) {
-        console.log('event', event);
-        if (!users?.some((u) => u.id === event.after.authorId)) fetchUsers();
-        setMessages((prev) => [...prev, event.after]);
-      }
+      //   for await (const event of subscription) {
+      //     console.log('event', event);
+      //     if (!event.after.isSystem && !users?.some((u) => u.id === event.after.authorId)) fetchUsers();
+      //     setMessages((prev) => [...prev, event.after]);
+      //   }
     })();
   }, []);
 
@@ -116,13 +116,15 @@ const Chat: NextPage<{}> = ({}) => {
           {/* <Button onClick={() => scrollToEnd('smooth')}>scroll</Button> */}
           <div className="flex flex-col gap-2">
             {messages?.map((m, i) => {
+              const isSystemMessage = m.isSystem;
               const isMyMessage = m.authorId === user?.id;
+
               const author = users?.find((u) => u.id === m.authorId);
 
               return (
-                <div key={m.id} className={`w-full ${isMyMessage ? 'justify-end' : ''} flex gap-1  break-words`}>
-                  {!isMyMessage && <MessageAvatar user={author} />}
-                  <div className={`rounded-xl p-2 max-w-[80%] ${isMyMessage ? 'bg-slate-900 text-white' : ' bg-slate-200'}`}>{m.body}</div>
+                <div key={m.id} className={`w-full ${isMyMessage ? 'justify-end' : isSystemMessage ? 'justify-center' : ''} flex gap-1  break-words`}>
+                  {!isSystemMessage && !isMyMessage && <MessageAvatar user={author} />}
+                  {isSystemMessage ? <div className="text-slate-400">{m.body}</div> : <div className={`rounded-xl p-2 max-w-[80%] ${isMyMessage ? 'bg-slate-900 text-white' : ' bg-slate-200'}`}>{m.body}</div>}
                 </div>
               );
             })}

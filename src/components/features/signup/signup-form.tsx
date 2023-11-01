@@ -37,6 +37,12 @@ export function SignupForm({ onUserCreated }: { onUserCreated: (user: User) => v
       .then((user) => {
         console.log('user created!', user);
         setErrCreatingUser(false);
+        bridg.message.create({
+          data: {
+            isSystem: true,
+            body: `${user.name} has joined the chat!`,
+          },
+        });
         saveUser(user);
       })
       .catch((e) => {
