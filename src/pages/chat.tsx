@@ -40,18 +40,15 @@ const Chat: NextPage<{}> = ({}) => {
 
   const fetchUsers = () => bridg.user.findMany().then((users) => setUsers(users));
 
-  const scrollToEnd = (behavior: 'smooth' | 'instant' = 'instant') => {
-    if (messageBox.current) {
-      messageBox.current.scrollTo({
-        top: messageBox.current.scrollHeight,
-        behavior,
-      });
-    }
-  };
+  const scrollToEnd = (behavior: ScrollBehavior | undefined) =>
+    messageBox?.current?.scrollTo({
+      top: messageBox.current.scrollHeight,
+      behavior,
+    });
 
   useEffect(() => {
     const behavior = prevMessages?.length === 0 ? 'instant' : 'smooth';
-    scrollToEnd(behavior);
+    scrollToEnd(behavior as ScrollBehavior);
   }, [messages.length]);
 
   useEffect(() => {
@@ -59,7 +56,6 @@ const Chat: NextPage<{}> = ({}) => {
       await fetchUsers();
       const messages = await bridg.message.findMany({ take: 25, orderBy: { createdAt: 'desc' } });
       setMessages(messages.reverse());
-      scrollToEnd('smooth');
 
       // @ts-ignore
       const subscription = await bridg.message.subscribe({ create: { after: {} } });
@@ -69,7 +65,6 @@ const Chat: NextPage<{}> = ({}) => {
         console.log('event', event);
         if (!users?.some((u) => u.id === event.after.authorId)) fetchUsers();
         setMessages((prev) => [...prev, event.after]);
-        scrollToEnd('smooth');
       }
     })();
   }, []);
