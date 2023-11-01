@@ -165,7 +165,8 @@ const MessageAvatar: React.FC<{ user?: User }> = ({ user }) => {
           </div>
         </TooltipTrigger>
         <TooltipContent className="bg-slate-950 text-white p-2 rounded-md">
-          <p>@{user?.name}</p>
+          <p className="">@{user?.name}</p>
+          <div className="absolute -bottom-1 rounded-sm bg-slate-950 h-3 w-3 left-[45%] rotate-45"></div>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
