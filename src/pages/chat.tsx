@@ -41,16 +41,13 @@ const newMessageSchema = z.object({
 const Chat: React.FC<{}> = ({}) => {
   const [user, saveUser] = useLocalStorage<User | null>('user', null);
   const router = useRouter();
-  if (!user) {
-    router.push('/');
-    return <></>;
-  }
+
   const messageBox = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const prevMessages = usePrevious(messages);
   const [users, setUsers] = useState<User[]>([]);
 
-  const fetchUsers = () =>
+  const loadUsers = () =>
     bridg.user.findMany().then((users) => setUsers(users));
 
   const scrollToEnd = (behavior: ScrollBehavior | undefined) =>
@@ -66,7 +63,7 @@ const Chat: React.FC<{}> = ({}) => {
 
   useEffect(() => {
     (async () => {
-      await fetchUsers();
+      await loadUsers();
       const messages = await bridg.message.findMany({
         take: 25,
         orderBy: { createdAt: 'desc' },
@@ -86,7 +83,7 @@ const Chat: React.FC<{}> = ({}) => {
 
         newMsg.authorId &&
           !users?.some((u) => u.id === newMsg.authorId) &&
-          fetchUsers();
+          loadUsers();
 
         // fixes duplicate rendered join messages when you login
         if (messages.some((m) => m.id === newMsg?.id)) return;
@@ -100,11 +97,10 @@ const Chat: React.FC<{}> = ({}) => {
     defaultValues: { body: '' },
   });
 
-  const onSubmit = (values: z.infer<typeof newMessageSchema>) =>
-    bridg.message
-      .create({ data: { ...values, authorId: user.id as string } })
-      .then((msg) => form.reset())
-      .catch((e) => console.log('err sending msg:', e));
+  if (!user) {
+    router.push('/');
+    return <></>;
+  }
 
   return (
     <div>
@@ -148,7 +144,15 @@ const Chat: React.FC<{}> = ({}) => {
 
         <div className="absolute bottom-5 left-0 right-0 px-10">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form
+              onSubmit={form.handleSubmit((values) =>
+                bridg.message
+                  .create({ data: { ...values, authorId: user.id as string } })
+                  .then((msg) => form.reset())
+                  .catch((e) => console.log('err sending msg:', e)),
+              )}
+              className="space-y-8"
+            >
               <FormField
                 control={form.control}
                 name="body"

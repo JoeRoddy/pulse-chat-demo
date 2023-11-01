@@ -55,6 +55,7 @@ export function SignupForm({
         bridg.message.create({
           data: {
             isSystem: true,
+            authorId: user.id,
             body: `@${user.name} has joined the chat!`,
           },
         });
