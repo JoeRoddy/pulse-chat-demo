@@ -13,7 +13,11 @@ const db = new PrismaClient().$extends(withPulse({ apiKey: PULSE_API_KEY })) as 
 
 export const socket: NextWebSocketHandler = (ws) => {
   let subscriptions: any[] = [];
-  ws.on('close', () => subscriptions.forEach((s) => s.subscription.stop()));
+  ws.on('close', () => {
+    console.log('connection closed, stopping subscriptions');
+
+    subscriptions.forEach((s) => s.subscription.stop());
+  });
 
   ws.on('message', async function message(data: string) {
     const incomingMsg = JSON.parse(data);
@@ -22,6 +26,8 @@ export const socket: NextWebSocketHandler = (ws) => {
     const reply = (replyPayload: {}) => ws.send(JSON.stringify({ id: incomingMsg.id, payload: replyPayload }));
 
     if (request.func === 'unsubscribe') {
+      console.log('stopping subscription');
+
       subscriptions
         .splice(
           subscriptions.findIndex((s) => s.id === incomingMsg.id),
@@ -30,12 +36,21 @@ export const socket: NextWebSocketHandler = (ws) => {
         .at(0)
         ?.subscription.stop();
     } else {
+      console.log('incoming request', request);
+
       const res = await handleRequest(request, {
         rules,
         uid: '',
         db,
-        onSubscriptionCreated: (subscription) => subscriptions.push({ id: incomingMsg.id, subscription }),
-        onSubscriptionEvent: (newData) => reply(newData),
+        onSubscriptionCreated: (subscription) => {
+          console.log('subscription created!!!');
+          subscriptions.push({ id: incomingMsg.id, subscription });
+        },
+        onSubscriptionEvent: (newData) => {
+          console.log('subscription event', newData);
+
+          reply(newData);
+        },
       });
       request.func !== 'subscribe' && reply(res);
     }
