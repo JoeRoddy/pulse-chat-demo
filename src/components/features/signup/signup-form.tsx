@@ -33,7 +33,7 @@ export function SignupForm({ onUserCreated }: { onUserCreated: (user: User) => v
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     bridg.user
-      .create({ data: values })
+      .create({ data: { name: slugify(values.name), colorIndex: getRandomInt(0, 9) } })
       .then((user) => {
         console.log('user created!', user);
         setErrCreatingUser(false);
@@ -67,4 +67,14 @@ export function SignupForm({ onUserCreated }: { onUserCreated: (user: User) => v
       </form>
     </Form>
   );
+}
+
+// get random int in range
+function getRandomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// convert string to lower case underscore separated version instead of spaces
+function slugify(str: string) {
+  return str.toLowerCase().replace(/ /g, '_');
 }

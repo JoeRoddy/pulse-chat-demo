@@ -1,9 +1,9 @@
-'use client';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Message, User } from '@prisma/client';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { useLocalStorage, usePrevious } from '@uidotdev/usehooks';
 import bridg from 'bridg';
 import { NextPage } from 'next';
@@ -12,13 +12,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-interface Props {}
-
-// This is obv not the right way to do this, just for demo purposes
-const ChatScreen: NextPage<Props> = ({}) => {
+// This is obv not the right way to do this, just hacking for demo purposes
+const ChatScreen: NextPage<{}> = ({}) => {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
-    const i = setTimeout(() => {
+    setTimeout(() => {
       setLoaded(true);
     }, 200);
   }, []);
@@ -32,12 +30,15 @@ const newMessageSchema = z.object({
   }),
 });
 
-const Chat: NextPage<Props> = ({}) => {
+const Chat: NextPage<{}> = ({}) => {
   const [user, saveUser] = useLocalStorage<User | null>('user', null);
   const router = useRouter();
   const messageBox = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const prevMessages = usePrevious(messages);
+  const [users, setUsers] = useState<User[]>([]);
+
+  const fetchUsers = () => bridg.user.findMany().then((users) => setUsers(users));
 
   const scrollToEnd = (behavior: 'smooth' | 'instant' = 'instant') => {
     if (messageBox.current) {
@@ -55,6 +56,7 @@ const Chat: NextPage<Props> = ({}) => {
 
   useEffect(() => {
     (async () => {
+      await fetchUsers();
       const messages = await bridg.message.findMany({ take: 25, orderBy: { createdAt: 'desc' } });
       setMessages(messages.reverse());
       scrollToEnd('smooth');
@@ -65,6 +67,7 @@ const Chat: NextPage<Props> = ({}) => {
 
       for await (const event of subscription) {
         console.log('event', event);
+        if (!users?.some((u) => u.id === event.after.authorId)) fetchUsers();
         setMessages((prev) => [...prev, event.after]);
         scrollToEnd('smooth');
       }
@@ -77,19 +80,10 @@ const Chat: NextPage<Props> = ({}) => {
   });
 
   function onSubmit(values: z.infer<typeof newMessageSchema>) {
-    console.log('creating', values);
-    console.log('bridg', bridg);
-
     bridg.message
       .create({ data: { ...values, authorId: user?.id as string } })
-      .then((msg) => {
-        console.log('msg created!', msg);
-        // setErrCreatingUser(false);
-        // saveUser(user);
-        form.reset();
-      })
+      .then((msg) => form.reset())
       .catch((e) => {
-        // setErrCreatingUser(true);
         console.log('err', e);
       });
   }
@@ -97,24 +91,42 @@ const Chat: NextPage<Props> = ({}) => {
   return (
     <div className="">
       CHAT PAGE
-      <div className="fixed inset-0 bg-gray-50">
-        <div className="absolute inset-0 bottom-16 px-10 py-2 overflow-y-auto" ref={messageBox}>
-          <Button
-            onClick={() => {
-              saveUser(null);
-              router.push('/');
-            }}
-          >
-            Sign out
-          </Button>
-          <Button onClick={() => scrollToEnd('smooth')}>scroll</Button>
+      <div className="fixed inset-0 bg-gray-50 ">
+        <div className="bg-slate-950 opacity-80 z-10 text-white sticky top-0 h-14 shadow-lg flex items-center px-5 justify-between">
+          <div className="flex text-2xl font-medium gap-2">
+            <div className="font-normal">bridg.chat</div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            @{user?.name}
+            <Button
+              // className="bg-white text-slate-950"
+              variant={'secondary'}
+              onClick={() => {
+                saveUser(null);
+                router.push('/');
+              }}
+              // className="mb-4"
+            >
+              Sign Out
+            </Button>
+          </div>
+        </div>
+
+        <div className="absolute pt-20 top-0 left-0 right-0 bottom-16 overflow-y-auto p-10" ref={messageBox}>
+          {/* <div className="w-full flex justify-end">
+           
+          </div> */}
+
+          {/* <Button onClick={() => scrollToEnd('smooth')}>scroll</Button> */}
           <div className="flex flex-col gap-2">
             {messages?.map((m, i) => {
               const isMyMessage = m.authorId === user?.id;
+              const author = users?.find((u) => u.id === m.authorId);
 
               return (
                 <div key={m.id} className={`w-full ${isMyMessage ? 'justify-end' : ''} flex gap-1  break-words`}>
-                  {!isMyMessage && <div className="h-10 w-10 bg-red-200 rounded-full"></div>}
+                  {!isMyMessage && <MessageAvatar user={author} />}
                   <div className={`rounded-xl p-2 max-w-[80%] ${isMyMessage ? 'bg-slate-900 text-white' : ' bg-slate-200'}`}>{m.body}</div>
                 </div>
               );
@@ -144,28 +156,33 @@ const Chat: NextPage<Props> = ({}) => {
     </div>
   );
 };
+
 export default ChatScreen;
 
-const generateFakeMessages = (): Message[] =>
-  new Array(20).fill(1).map((u, i) => ({
-    authorId: '',
-    body: 'hello world_' + randomString(1500) + i,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    id: '',
-  }));
-
-// get random number in range
-const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-//   generate random string of random length
-const randomString = (maxLeng: number) => {
-  const length = getRandomInt(1, maxLeng);
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) result += i % 5 === 0 ? ' ' : characters.charAt(Math.floor(Math.random() * charactersLength));
-  return result;
+const MessageAvatar: React.FC<{ user?: User }> = ({ user }) => {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div style={{ backgroundColor: colorHexes[user?.colorIndex || 0] }} className="cursor-default h-10 w-10 rounded-full  text-white flex items-center justify-center">
+            {/* {user?.name.slice(0, 2).toUpperCase()} */}
+            {slugToInitials(user?.name || '')}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent className="bg-slate-950 text-white p-2 rounded-md">
+          <p>@{user?.name}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 };
 
-const fakeMessages = generateFakeMessages();
+// convert slug to first two initials
+const slugToInitials = (slug: string) => {
+  const [first, second] = slug.split('_');
+  console.log([first, second]);
+
+  return first ? `${first?.at(0)?.toUpperCase()}${second ? second?.at(0)?.toUpperCase() : ''}` : '?';
+};
+
+const colorHexes = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F97316', '#059669'];

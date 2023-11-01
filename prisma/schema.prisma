@@ -14,8 +14,9 @@ datasource db {
 }
 
 model User {
-  id   String @id @default(cuid())
-  name String @unique
+  id         String @id @default(cuid())
+  name       String @unique
+  colorIndex Int    @default(0)
 
   messages Message[]
 

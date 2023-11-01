@@ -7,8 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   //   if (req.method !== 'POST') return res.status(405).send('');
   const result = await prisma.message.create({
     data: {
-      authorId: 'cloezt0up0000lf1lfltu65p2',
-      body: 'helloooo ',
+      authorId: 'clof15atq0006lffyjihxt3n2',
+      body: 'hi ling ',
     },
   });
   if (result) return res.status(200).json(result);
