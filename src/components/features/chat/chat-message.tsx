@@ -9,11 +9,12 @@ const ChatMessage: React.FC<{
   isMyMessage?: boolean;
 }> = ({ message, author, isMyMessage }) => {
   const isSystemMessage = message.isSystem;
+
   return (
     <div
       key={message.id}
       className={`w-full ${
-        isMyMessage ? 'justify-end' : isSystemMessage ? 'justify-center' : ''
+        isSystemMessage ? 'justify-center' : isMyMessage ? 'justify-end' : ''
       } flex gap-1  break-words`}
     >
       {!isSystemMessage && author && !isMyMessage && (
