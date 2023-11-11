@@ -16,7 +16,7 @@ import { getRandomInt, slugify } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '@prisma/client';
 import bridg from 'bridg';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 const formSchema = z.object({
@@ -32,10 +32,6 @@ export function SignupForm({
 }) {
   const [user, saveUser] = useUser();
   const [errCreatingUser, setErrCreatingUser] = useState(false);
-
-  useEffect(() => {
-    user && onUserCreated(user);
-  }, [user]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,6 +58,7 @@ export function SignupForm({
             body: `@${user.name} has joined the chat!`,
           },
         });
+        onUserCreated(user);
       })
       .catch((e) => {
         setErrCreatingUser(true);
