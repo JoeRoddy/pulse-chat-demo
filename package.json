@@ -47,7 +47,7 @@
     "@types/react": "18.0.27",
     "@types/react-dom": "18.0.10",
     "@uidotdev/usehooks": "^2.4.1",
-    "bridg": "^1.1.1-alpha.0",
+    "bridg": "^1.1.1-alpha.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",

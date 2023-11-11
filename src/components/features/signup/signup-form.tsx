@@ -11,10 +11,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import useUser from '@/hooks/useUser';
 import { getRandomInt, slugify } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '@prisma/client';
-import { useLocalStorage } from '@uidotdev/usehooks';
 import bridg from 'bridg';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -30,7 +30,7 @@ export function SignupForm({
 }: {
   onUserCreated: (user: User) => void;
 }) {
-  const [user, saveUser] = useLocalStorage<User | null>('user', null);
+  const [user, saveUser] = useUser();
   const [errCreatingUser, setErrCreatingUser] = useState(false);
 
   useEffect(() => {
@@ -49,17 +49,19 @@ export function SignupForm({
       .create({
         data: { name: slugify(values.name), colorIndex: getRandomInt(0, 9) },
       })
-      .then((user) => {
+      .then(async (user) => {
         console.log('user created!', user);
         setErrCreatingUser(false);
-        bridg.message.create({
+        saveUser(user);
+        // give some time for fake login to process before sending msg
+        await new Promise((r) => setTimeout(r, 200));
+        await bridg.message.create({
           data: {
             isSystem: true,
             authorId: user.id,
             body: `@${user.name} has joined the chat!`,
           },
         });
-        saveUser(user);
       })
       .catch((e) => {
         setErrCreatingUser(true);

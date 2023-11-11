@@ -15,6 +15,7 @@ const db = new PrismaClient().$extends(
 
 export const socket: NextWebSocketHandler = (ws) => {
   let subscriptions: any[] = [];
+  let uid: string | undefined;
   ws.on('close', () => {
     console.log('connection closed, stopping subscriptions');
 
@@ -28,6 +29,11 @@ export const socket: NextWebSocketHandler = (ws) => {
     const reply = (replyPayload: {}) =>
       ws.send(JSON.stringify({ id: incomingMsg.id, payload: replyPayload }));
 
+    if (request.type === 'authenticate') {
+      uid = request.token;
+      return reply({ status: 200, data: { authenticated: true } });
+    }
+
     if (request.func === 'unsubscribe') {
       console.log('stopping subscription');
 
@@ -39,11 +45,9 @@ export const socket: NextWebSocketHandler = (ws) => {
         .at(0)
         ?.subscription?.stop();
     } else {
-      console.log('incoming request', request);
-
       const res = await handleRequest(request, {
         rules,
-        uid: '',
+        uid,
         db,
         onSubscriptionCreated: (subscription) => {
           console.log('subscription created!!');

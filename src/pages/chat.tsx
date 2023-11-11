@@ -8,9 +8,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import useUser from '@/hooks/useUser';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Message, User } from '@prisma/client';
-import { useLocalStorage, usePrevious } from '@uidotdev/usehooks';
+import { usePrevious } from '@uidotdev/usehooks';
 import bridg from 'bridg';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
@@ -39,7 +40,7 @@ const newMessageSchema = z.object({
 });
 
 const Chat: React.FC<{}> = ({}) => {
-  const [user, saveUser] = useLocalStorage<User | null>('user', null);
+  const [user, saveUser] = useUser();
   const router = useRouter();
 
   const messageBox = useRef<HTMLDivElement>(null);
@@ -62,6 +63,8 @@ const Chat: React.FC<{}> = ({}) => {
   }, [messages.length]);
 
   useEffect(() => {
+    if (!user?.id) return;
+
     (async () => {
       await loadUsers();
       const messages = await bridg.message.findMany({
@@ -90,16 +93,18 @@ const Chat: React.FC<{}> = ({}) => {
         setMessages((prev) => [...prev, newMsg]);
       }
     })();
-  }, []);
+  }, [user?.id]);
 
   const form = useForm<z.infer<typeof newMessageSchema>>({
     resolver: zodResolver(newMessageSchema),
     defaultValues: { body: '' },
   });
 
-  if (!user) {
+  if (user === null) {
     router.push('/');
     return <></>;
+  } else if (!user) {
+    return <div>Loading...</div>;
   }
 
   return (
