@@ -5,8 +5,8 @@ generator client {
 generator bridg {
   provider = "bridg"
   pulse    = true
-  api      = "ws://localhost:3000/api/socket"
-  // api      = "wss://bridg-chat.onrender.com/api/socket"
+  // api      = "ws://localhost:3000/api/socket"
+  api      = "wss://bridg-chat.onrender.com/api/socket"
 }
 
 datasource db {
