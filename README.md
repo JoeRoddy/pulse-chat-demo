@@ -1,4 +1,4 @@
-# Bridg + Pulse!
+# Bridg + Pulse + Prisma!
 
 ### Up and Running
 
