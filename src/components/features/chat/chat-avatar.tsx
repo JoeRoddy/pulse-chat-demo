@@ -5,7 +5,7 @@ const ChatAvatar: React.FC<{ user: User }> = ({ user }) => (
   <WithTooltip tooltipText={`@${user.name}`}>
     <div
       style={{ backgroundColor: colorHexes[user?.colorIndex || 0] }}
-      className="cursor-default h-10 w-10 rounded-full  text-white flex items-center justify-center"
+      className="cursor-default h-10 w-10 rounded-full text-white flex items-center justify-center"
     >
       {slugNameToInitials(user?.name || '')}
     </div>

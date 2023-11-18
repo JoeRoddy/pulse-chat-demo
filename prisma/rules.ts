@@ -8,7 +8,11 @@ export const rules: DbRules = {
     create: (uid) => !uid, // not logged in
   },
   message: {
-    find: (uid) => !!uid, // logged in
+    find: (uid) => !!uid,
+    // find: {
+    //   rule: (uid) => !!uid,
+    //   blockedFields: ['body'],
+    // },
 
     // logged in and is taking ownership of the msg
     create: (uid, data) => !!uid && data?.authorId === uid,

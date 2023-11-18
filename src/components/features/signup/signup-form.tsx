@@ -47,7 +47,7 @@ export function SignupForm({
 
     bridg.user
       .create({
-        data: { name: slugify(values.name), colorIndex: getRandomInt(0, 9) },
+        data: { name: slugify(values.name), colorIndex: getRandomInt(0, 8) },
       })
       .then(async (user) => {
         console.log('user created!', user);
