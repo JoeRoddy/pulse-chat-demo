@@ -16,6 +16,7 @@ import { getRandomInt, slugify } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from '@prisma/client';
 import bridg from 'bridg';
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -32,6 +33,7 @@ export function SignupForm({
 }) {
   const [user, saveUser] = useUser();
   const [errCreatingUser, setErrCreatingUser] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,6 +43,8 @@ export function SignupForm({
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+
     bridg.user
       .create({
         data: { name: slugify(values.name), colorIndex: getRandomInt(0, 9) },
@@ -50,7 +54,7 @@ export function SignupForm({
         setErrCreatingUser(false);
         saveUser(user);
         // give some time for fake login to process before sending msg
-        await new Promise((r) => setTimeout(r, 200));
+        await new Promise((r) => setTimeout(r, 1000));
         await bridg.message.create({
           data: {
             isSystem: true,
@@ -59,11 +63,18 @@ export function SignupForm({
           },
         });
         onUserCreated(user);
+        setIsLoading(false);
       })
       .catch((e) => {
         setErrCreatingUser(true);
         console.log('err', e);
       });
+  }
+
+  if (user) {
+    onUserCreated(user);
+
+    return <></>;
   }
 
   return (
@@ -90,7 +101,10 @@ export function SignupForm({
             Error creating user
           </p>
         )}
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Submit
+        </Button>
       </form>
     </Form>
   );
